@@ -51,40 +51,7 @@ public class AndroidLauncher extends AndroidApplication {
 
 		// Hook it all up
 		setContentView(layout);
-
-		//initialize(new DoubleDodge(new AndroidDatabaseAccess()), config);
-	}
-
-	@Override
-	public void onResume() {
-		super.onResume();
-
-
-	}
-
-	@Override
-	public void onPause() {
-
-
-		super.onPause();
-	}
-
-	@Override
-	public void onDestroy() {
-
-
-		super.onDestroy();
-	}
-
-	@Override
-	public void onBackPressed(){
-		try{
-			Intent i = new Intent(AndroidLauncher.this, MainActivity.class);
-
-			startActivity(i);
-			finish();
-		}
-		catch(Exception ignored){}
+		
 	}
 
 

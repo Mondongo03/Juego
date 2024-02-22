@@ -29,7 +29,7 @@ import java.util.Iterator;
 
 public class Juego extends ApplicationAdapter {
 	private Texture background,background_2,background_3,background_4,bg,texture;
-	private Texture bucketImage;
+	private Texture sacoImage;
 	private Sound coinSound;
 	private Sound bombSound;
 
@@ -41,10 +41,9 @@ public class Juego extends ApplicationAdapter {
 	private Music backgroundMusic;
 	private SpriteBatch batch;
 	private OrthographicCamera camera;
-	private Rectangle bucket;
+	private Rectangle saco;
 	private Array<Rectangle> bombdrops;
 	private Array<Rectangle> bombs;
-	private Array<Rectangle> explosions;
 	private Array<Rectangle> missiles;
 	private Array<Rectangle> stars;
 
@@ -61,12 +60,11 @@ public class Juego extends ApplicationAdapter {
 	float currentBgX;
 	long lastTimeBg;
 
-	private Stage stage,ab;
-	private TextButton button,button2;
+	private Stage stage;
+	private TextButton button;
 	private TextButton.TextButtonStyle textButtonStyle;
-	private BitmapFont font;
+
 	private Skin skin;
-	private TextureAtlas buttonAtlas;
 
 	Label ScoreLabel,LevelLabel,HiLabel;
 	public boolean paused = false;
@@ -78,8 +76,6 @@ public class Juego extends ApplicationAdapter {
 		stage = new Stage();
 		Gdx.input.setInputProcessor(stage);
 		skin = new Skin();
-		buttonAtlas = new TextureAtlas(Gdx.files.internal("button.pack"));
-		skin.addRegions(buttonAtlas);
 		textButtonStyle = new TextButton.TextButtonStyle();
 		textButtonStyle.font = font12;
 
@@ -94,7 +90,7 @@ public class Juego extends ApplicationAdapter {
 		lastTimeBg = TimeUtils.nanoTime();
 
 
-		bucketImage = new Texture(Gdx.files.internal("bucket.png"));
+		sacoImage = new Texture(Gdx.files.internal("saco_monedas.png"));
 		background = new Texture(Gdx.files.internal("background.png"));
 		background_2 = new Texture(Gdx.files.internal("background_2.png"));
 		background_3 = new Texture(Gdx.files.internal("background_3.png"));
@@ -160,18 +156,17 @@ public class Juego extends ApplicationAdapter {
 		camera.setToOrtho(false, 800, 480);
 		batch = new SpriteBatch();
 
-		bucket = new Rectangle();
-		bucket.x = 800 / 2 - 64 / 2;
-		bucket.y = 20;
-		bucket.width = 64;
-		bucket.height = 64;
+		saco = new Rectangle();
+		saco.x = 800 / 2 - 64 / 2;
+		saco.y = 20;
+		saco.width = 64;
+		saco.height = 64;
 
 		bombdrops = new Array<Rectangle>();
 		spawnCoin();
 
 		bombs = new Array<Rectangle>();
 		spawnBomb();
-		explosions = new Array<Rectangle>();
 		missiles = new Array<Rectangle>();
 		if(level>1)spawnMissile();
 
@@ -234,14 +229,14 @@ public class Juego extends ApplicationAdapter {
 			@Override
 			public void changed(ChangeListener.ChangeEvent event, Actor actor) {
 				score=0;
-				yourScoreName = "Score:" + score;
+				yourScoreName = "Puntuación: " + score;
 				ScoreLabel.setText(yourScoreName);
 				Preferences prefs = Gdx.app.getPreferences("CoinHuntPreferences");
-				prefs.putInteger("score", score);
+				prefs.putInteger("Puntuación ", score);
 				prefs.flush();
 
 				Preferences pref = Gdx.app.getPreferences("CoinHuntHi");
-				pref.putInteger("hiscore", 0);
+				pref.putInteger("Puntuación Máxima", 0);
 				pref.flush();
 
 
@@ -250,12 +245,12 @@ public class Juego extends ApplicationAdapter {
 		});
 
 		Preferences pref = Gdx.app.getPreferences("CoinHuntHi");
-		if(score> pref.getInteger("hiscore", 0)){
-			pref.putInteger("hiscore", score);
+		if(score> pref.getInteger("Puntuación Máxima", 0)){
+			pref.putInteger("Puntuación Máxima", score);
 			pref.flush();
 		}
-		int hiscore=  pref.getInteger("hiscore", 0);
-		String hiscoretxt="Hiscore:"+hiscore;
+		int hiscore=  pref.getInteger("Puntuación Máxima", 0);
+		String hiscoretxt="Puntuación Máxima "+hiscore;
 		HiLabel.setText(hiscoretxt);
 
 		stateTime += Gdx.graphics.getDeltaTime();
@@ -287,7 +282,7 @@ public class Juego extends ApplicationAdapter {
 
 
 
-		batch.draw(bucketImage, bucket.x, bucket.y);
+		batch.draw(sacoImage, saco.x, saco.y);
 
 		for (Rectangle bomb : bombs) {
 			batch.draw(bombTexture, bomb.x, bomb.y, bomb.width, bomb.height);
@@ -319,14 +314,14 @@ public class Juego extends ApplicationAdapter {
 			Vector3 touchPos = new Vector3();
 			touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 			camera.unproject(touchPos);
-			bucket.x = touchPos.x - 64 / 2;
+			saco.x = touchPos.x - 64 / 2;
 		}
-		if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) bucket.x -= 200 * Gdx.graphics.getDeltaTime();
-		if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) bucket.x += 200 * Gdx.graphics.getDeltaTime();
+		if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) saco.x -= 200 * Gdx.graphics.getDeltaTime();
+		if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) saco.x += 200 * Gdx.graphics.getDeltaTime();
 
 
-		if (bucket.x < 0) bucket.x = 0;
-		if (bucket.x > 800 - 64) bucket.x = 800 - 64;
+		if (saco.x < 0) saco.x = 0;
+		if (saco.x > 800 - 64) saco.x = 800 - 64;
 
 		if (TimeUtils.nanoTime() - lastDropTime > 700000000) spawnCoin();
 		if (TimeUtils.nanoTime() - lastDropTime2 > 1500000000) spawnBomb();
@@ -342,14 +337,14 @@ public class Juego extends ApplicationAdapter {
 			Rectangle bombdrop = iter.next();
 			bombdrop.y -= 200 * Gdx.graphics.getDeltaTime();
 			if (bombdrop.y + 64 < 0) iter.remove();
-			if (bombdrop.overlaps(bucket)) {
+			if (bombdrop.overlaps(saco)) {
 				score++;
-				yourScoreName = "Score:" + score;
+				yourScoreName = "Puntuación: " + score;
 				ScoreLabel.setText(yourScoreName);
 
 				coinSound.play();
 				Preferences prefs = Gdx.app.getPreferences("CoinHuntPreferences");
-				prefs.putInteger("score", score);
+				prefs.putInteger("Puntuación: ", score);
 				prefs.flush();
 				iter.remove();
 			}
@@ -359,7 +354,7 @@ public class Juego extends ApplicationAdapter {
 			Rectangle bomb = iter.next();
 			bomb.y -= 200 * Gdx.graphics.getDeltaTime();
 			if (bomb.y + 64 < 0) iter.remove();
-			if (bomb.overlaps(bucket)) {
+			if (bomb.overlaps(saco)) {
 				score -= 5;
 				if (score < 0) score = 0;
 				yourScoreName = "Score:" + score;
@@ -377,7 +372,7 @@ public class Juego extends ApplicationAdapter {
 			Rectangle missile = iter.next();
 			missile.y -= 400 * Gdx.graphics.getDeltaTime();
 			if (missile.y + 64 < 0) iter.remove();
-			if (missile.overlaps(bucket)) {
+			if (missile.overlaps(saco)) {
 				score -=20;
 				if (score < 0) score = 0;
 				yourScoreName = "Score:" + score;
@@ -395,7 +390,7 @@ public class Juego extends ApplicationAdapter {
 			Rectangle star = iter.next();
 			star.y -= 400 * Gdx.graphics.getDeltaTime();
 			if (star.y + 64 < 0) iter.remove();
-			if (star.overlaps(bucket)) {
+			if (star.overlaps(saco)) {
 				score+=10;
 				yourScoreName = "Score:" + score;
 				ScoreLabel.setText(yourScoreName);
@@ -448,7 +443,7 @@ public class Juego extends ApplicationAdapter {
 	public void dispose() {
 
 		background.dispose();
-		bucketImage.dispose();
+		sacoImage.dispose();
 		coinSound.dispose();
 		bombSound.dispose();
 		backgroundMusic.dispose();
