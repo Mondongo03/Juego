@@ -10,22 +10,18 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 
@@ -37,12 +33,18 @@ public class Juego extends ApplicationAdapter {
 	private Sound coinSound;
 	private Sound bombSound;
 
+	private Texture bombTexture;
+	private Texture coinTexture;
+	private Texture missileTexture;
+	private Texture starTexture;
+
 	private Music backgroundMusic;
 	private SpriteBatch batch;
 	private OrthographicCamera camera;
 	private Rectangle bucket;
 	private Array<Rectangle> bombdrops;
 	private Array<Rectangle> bombs;
+	private Array<Rectangle> explosions;
 	private Array<Rectangle> missiles;
 	private Array<Rectangle> stars;
 
@@ -50,15 +52,6 @@ public class Juego extends ApplicationAdapter {
 	private long lastDropTime2;
 	private long lastDropTime3;
 	private long lastDropTime4;
-	TextureAtlas charset;
-	Animation<TextureRegion> BAnimation;
-	Animation<TextureRegion> CAnimation;
-	Animation<TextureRegion> EAnimation;
-	Animation<TextureRegion> MAnimation;
-	Animation<TextureRegion> BEAnimation;
-	Animation<TextureRegion> EEAnimation;
-	Animation<TextureRegion> SAnimation;
-
 
 	private float stateTime;
 	private int score,level;
@@ -81,7 +74,7 @@ public class Juego extends ApplicationAdapter {
 	@Override
 	public void create() {
 		BitmapFont font12=new BitmapFont(Gdx.files.internal("font.fnt"));
-
+		score = 0;
 		stage = new Stage();
 		Gdx.input.setInputProcessor(stage);
 		skin = new Skin();
@@ -94,13 +87,6 @@ public class Juego extends ApplicationAdapter {
 		button.setPosition(Gdx.graphics.getWidth()/4,Gdx.graphics.getHeight()-40);
 		button.setScale(2,2);
 		stage.addActor(button);
-
-/*
-		button2 = new TextButton(" PAUSE ", textButtonStyle);
-		button2.setPosition(5,Gdx.graphics.getHeight()-40);
-		button2.setScale(2,2);
-		stage.addActor(button2);
-*/
 
 
 
@@ -119,35 +105,14 @@ public class Juego extends ApplicationAdapter {
 		coinSound = Gdx.audio.newSound(Gdx.files.internal("coin.mp3"));
 		backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("bg.mp3"));
 
+		bombTexture = new Texture(Gdx.files.internal("bomb.png"));
 
-		charset = new TextureAtlas(Gdx.files.internal("coinpk.atlas"));
-		Array<TextureAtlas.AtlasRegion> runningFrames1 = charset.findRegions("coin");
-		CAnimation = new Animation(0.05f, runningFrames1, Animation.PlayMode.LOOP);
+		coinTexture = new Texture(Gdx.files.internal("coin.png"));
 
-		charset = new TextureAtlas(Gdx.files.internal("bomb.atlas"));
-		Array<TextureAtlas.AtlasRegion> runningFrames2 = charset.findRegions("bomb");
-		BAnimation = new Animation(0.05f, runningFrames2, Animation.PlayMode.LOOP);
 
-		charset = new TextureAtlas(Gdx.files.internal("explosion.atlas"));
-		Array<TextureAtlas.AtlasRegion> runningFrames3 = charset.findRegions("explosion");
-		EAnimation = new Animation(0.3f, runningFrames3, Animation.PlayMode.LOOP);
+		missileTexture = new Texture(Gdx.files.internal("missile.png"));
 
-		charset = new TextureAtlas(Gdx.files.internal("missile.atlas"));
-		Array<TextureAtlas.AtlasRegion> runningFrames4 = charset.findRegions("missile");
-		MAnimation = new Animation(0.4f, runningFrames4, Animation.PlayMode.LOOP);
-
-		charset = new TextureAtlas(Gdx.files.internal("bigexplosion.atlas"));
-		Array<TextureAtlas.AtlasRegion> runningFrames5 = charset.findRegions("explosion");
-		BEAnimation = new Animation(1f, runningFrames5, Animation.PlayMode.LOOP);
-
-		charset = new TextureAtlas(Gdx.files.internal("exexplosion.atlas"));
-		Array<TextureAtlas.AtlasRegion> runningFrames6 = charset.findRegions("explosion");
-		EEAnimation = new Animation(1f, runningFrames6, Animation.PlayMode.LOOP);
-
-		charset = new TextureAtlas(Gdx.files.internal("star.atlas"));
-		Array<TextureAtlas.AtlasRegion> runningFrames7 = charset.findRegions("star");
-		SAnimation = new Animation(0.05f, runningFrames7, Animation.PlayMode.LOOP);
-
+		starTexture = new Texture(Gdx.files.internal("star.png"));
 
 		Gdx.graphics.setContinuousRendering(false);
 		Gdx.graphics.requestRendering();
@@ -159,10 +124,6 @@ public class Juego extends ApplicationAdapter {
 
 		texture = new Texture(Gdx.files.internal("background.png"));
 		texture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-
-		Preferences prefs = Gdx.app.getPreferences("CoinHuntPreferences");
-
-		score =prefs.getInteger("score", 0);
 		level=1;
 		yourScoreName = "Score:"+score;
 		yourBitmapFontName = new BitmapFont();
@@ -179,7 +140,7 @@ public class Juego extends ApplicationAdapter {
 		stage.addActor( LevelLabel);
 
 		Preferences pref = Gdx.app.getPreferences("CoinHuntHi");
-		int hiscore=  prefs.getInteger("hiscore", 0);
+		int hiscore=  pref.getInteger("hiscore", 0);
 		String hiscoretxt="Hiscore:"+hiscore;
 
 		HiLabel = new Label(hiscoretxt,new Label.LabelStyle(font12, Color.BLACK));
@@ -206,11 +167,11 @@ public class Juego extends ApplicationAdapter {
 		bucket.height = 64;
 
 		bombdrops = new Array<Rectangle>();
-		spawnbombdrop();
+		spawnCoin();
 
 		bombs = new Array<Rectangle>();
 		spawnBomb();
-
+		explosions = new Array<Rectangle>();
 		missiles = new Array<Rectangle>();
 		if(level>1)spawnMissile();
 
@@ -223,7 +184,7 @@ public class Juego extends ApplicationAdapter {
 	}
 
 
-	private void spawnbombdrop() {
+	private void spawnCoin() {
 		Rectangle bombdrop = new Rectangle();
 		bombdrop.x = MathUtils.random(0, 800 - 64);
 		bombdrop.y = 480;
@@ -287,18 +248,6 @@ public class Juego extends ApplicationAdapter {
 			}
 
 		});
-		/*
-		button2.addListener( new ClickListener() {
-			@Override
-			public void clicked  (InputEvent event, float x, float y) {
-
-				paused = !paused;
-				if(paused)button2.setText("PLAY");
-				else button2.setText("PAUSE");
-			}
-		});
-
-*/
 
 		Preferences pref = Gdx.app.getPreferences("CoinHuntHi");
 		if(score> pref.getInteger("hiscore", 0)){
@@ -310,10 +259,6 @@ public class Juego extends ApplicationAdapter {
 		HiLabel.setText(hiscoretxt);
 
 		stateTime += Gdx.graphics.getDeltaTime();
-		TextureRegion CFrame = CAnimation.getKeyFrame(stateTime, true);
-		TextureRegion BFrame = BAnimation.getKeyFrame(stateTime, true);
-		TextureRegion MFrame = MAnimation.getKeyFrame(stateTime, true);
-		TextureRegion SFrame = SAnimation.getKeyFrame(stateTime, true);
 
 
 		camera.update();
@@ -344,19 +289,20 @@ public class Juego extends ApplicationAdapter {
 
 		batch.draw(bucketImage, bucket.x, bucket.y);
 
-		for (Rectangle bombdrop : bombdrops) {
-			batch.draw(CFrame, bombdrop.x, bombdrop.y);
-		}
 		for (Rectangle bomb : bombs) {
-			batch.draw(BFrame, bomb.x, bomb.y);
+			batch.draw(bombTexture, bomb.x, bomb.y, bomb.width, bomb.height);
 		}
-
+		for (Rectangle bombdrop : bombdrops) {
+			batch.draw(coinTexture, bombdrop.x, bombdrop.y, bombdrop.width, bombdrop.height);
+		}
 		for (Rectangle missile : missiles) {
-			batch.draw(MFrame, missile.x, missile.y);
+			batch.draw(missileTexture, missile.x, missile.y, missile.width, missile.height);
 		}
 		for (Rectangle star : stars) {
-			batch.draw(SFrame, star.x, star.y);
+			batch.draw(starTexture, star.x, star.y, star.width, star.height);
 		}
+
+
 
 
 
@@ -382,13 +328,13 @@ public class Juego extends ApplicationAdapter {
 		if (bucket.x < 0) bucket.x = 0;
 		if (bucket.x > 800 - 64) bucket.x = 800 - 64;
 
-		if (TimeUtils.nanoTime() - lastDropTime > 700000000) spawnbombdrop();
+		if (TimeUtils.nanoTime() - lastDropTime > 700000000) spawnCoin();
 		if (TimeUtils.nanoTime() - lastDropTime2 > 1500000000) spawnBomb();
 		if ((TimeUtils.nanoTime() - lastDropTime3 > 1000000000)&&level>1) spawnMissile();
 		if ((TimeUtils.nanoTime() - lastDropTime3 > 500000000)&&level>2) spawnMissile();
 		if ((TimeUtils.nanoTime() - lastDropTime3 > 500000000)&&level>3) spawnBomb();
-		if ((TimeUtils.nanoTime() - lastDropTime > 500000000)&&level>3) spawnbombdrop();
-		if ((TimeUtils.nanoTime() - lastDropTime > 350000000)&&level>7) spawnbombdrop();
+		if ((TimeUtils.nanoTime() - lastDropTime > 500000000)&&level>3) spawnCoin();
+		if ((TimeUtils.nanoTime() - lastDropTime > 350000000)&&level>7) spawnCoin();
 		if ((TimeUtils.nanoTime() - lastDropTime4 > 1500000000)&&level>3) spawnStar();
 
 
@@ -414,7 +360,7 @@ public class Juego extends ApplicationAdapter {
 			bomb.y -= 200 * Gdx.graphics.getDeltaTime();
 			if (bomb.y + 64 < 0) iter.remove();
 			if (bomb.overlaps(bucket)) {
-				score -= 10;
+				score -= 5;
 				if (score < 0) score = 0;
 				yourScoreName = "Score:" + score;
 				ScoreLabel.setText(yourScoreName);
@@ -450,7 +396,7 @@ public class Juego extends ApplicationAdapter {
 			star.y -= 400 * Gdx.graphics.getDeltaTime();
 			if (star.y + 64 < 0) iter.remove();
 			if (star.overlaps(bucket)) {
-				score+=5;
+				score+=10;
 				yourScoreName = "Score:" + score;
 				ScoreLabel.setText(yourScoreName);
 
@@ -475,23 +421,24 @@ public class Juego extends ApplicationAdapter {
 	private void boom(int intensity)
 	{
 		bombSound.play();
-		TextureRegion EFr;
 
-
-		if(intensity==2){EFr = BEAnimation.getKeyFrame(stateTime, true);}
-		else
-		{ EFr = EEAnimation.getKeyFrame(stateTime, true);}
-
-		batch.begin();
-		batch.draw(EFr, bucket.x, bucket.y);
-		batch.end();
 	}
 
 	private int getgamelevel(int score)
 	{
-		int i;
-		for(i=1;score>5*i*i+10;i++)
-		{}
+		int i = 1;
+		if (score >=10){
+			i=2;
+		}
+		if (score >=20){
+			i=3;
+		}
+		if (score >=50){
+			i=4;
+		}
+		if (score >=100){
+			i=5;
+		}
 		return i;
 	}
 
