@@ -11,6 +11,7 @@ import android.widget.VideoView;
 
 public class Splash extends Activity {
 
+    /*
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -49,4 +50,7 @@ public class Splash extends Activity {
             return;
         startActivity(new Intent(this, MainActivity.class));
         finish();
-    }}
+    }
+    */
+
+}
